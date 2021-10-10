@@ -19,6 +19,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"sort"
@@ -187,7 +188,13 @@ func processSplitCommand(conf *pdfcpu.Configuration) {
 
 	process(cli.SplitCommand(inFile, outDir, span, conf))
 }
-
+func IsDir(path string) bool {
+	s, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return s.IsDir()
+}
 func processMergeCommand(conf *pdfcpu.Configuration) {
 	if mode == "" {
 		mode = "create"
@@ -206,7 +213,7 @@ func processMergeCommand(conf *pdfcpu.Configuration) {
 	filesIn := []string{}
 	outFile := ""
 	for i, arg := range flag.Args() {
-		ensurePdfExtension(arg)
+		//ensurePdfExtension(arg)
 		if i == 0 {
 			outFile = arg
 			continue
@@ -224,7 +231,17 @@ func processMergeCommand(conf *pdfcpu.Configuration) {
 			filesIn = append(filesIn, matches...)
 			continue
 		}
-		filesIn = append(filesIn, arg)
+		if IsDir(arg) {
+			filepath.Walk(arg, func(path string, info fs.FileInfo, err error) error {
+				if !info.IsDir() && filepath.Ext(path) == ".pdf" {
+					filesIn = append(filesIn, path)
+				}
+				return nil
+			})
+		} else {
+			filesIn = append(filesIn, arg)
+		}
+
 	}
 
 	if sorted {

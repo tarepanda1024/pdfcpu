@@ -166,7 +166,7 @@ func offsetLastXRefSection(ctx *Context, skip int64) (*int64, error) {
 
 		off, err := rs.Seek(-int64(i)*bufSize-skip, io.SeekEnd)
 		if err != nil {
-			return nil, errors.New("pdfcpu: can't find last xref section")
+			return nil, errors.New("pdfcpu: can't find last xref section:" + err.Error())
 		}
 
 		log.Read.Printf("scanning for offsetLastXRefSection starting at %d\n", off)
